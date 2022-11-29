@@ -1,6 +1,6 @@
 {
   "name": "@ethcontracts/ethers",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "ethers.js wraper for ethcontracts.js",
   "main": "dist/npm.export.js",
   "types": "dist/ts/index.d.ts",
@@ -31,7 +31,7 @@
   },
   "homepage": "https://github.com/ujjwalguptaofficial/ethcontracts-web3#readme",
   "devDependencies": {
-    "@ethcontracts/core": "^1.1.5",
+    "@ethcontracts/core": "^1.2.0",
     "copy-webpack-plugin": "^11.0.0",
     "cross-env": "^7.0.3",
     "del-cli": "^5.0.0",
@@ -43,6 +43,7 @@
     "webpack-node-externals": "^3.0.0"
   },
   "peerDependencies": {
-    "ethers": "^5.7.2"
+    "ethers": "^5.7.2",
+    "@ethcontracts/core": "^1.2.0"
   }
 }
