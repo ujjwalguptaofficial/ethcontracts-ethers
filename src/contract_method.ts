@@ -1,39 +1,74 @@
-import { Contract, } from "web3-eth-contract";
-import { PromiEvent } from "web3-core";
-import { txRequestConfigToWeb3 } from "./ethcontract_to_web3tx";
 import { ILogger, ITransactionRequestConfig, BaseContractMethod, TYPE_GET_TRANSACTION_HASH, TYPE_GET_TRANSACTION_RECEIPT } from "@ethcontracts/core";
+import { BigNumber, Contract, PopulatedTransaction, providers } from "ethers";
 
 export class ContractMethod extends BaseContractMethod {
 
-    constructor(public address, logger: ILogger, private method: any) {
+    constructor(logger: ILogger, private contract_: Contract, private methodName_, private args_) {
         super(logger);
     }
 
-    read<T>(tx: ITransactionRequestConfig): Promise<T> {
-        this.logger.log("sending tx with config", tx);
-        return this.method.call(
-            txRequestConfigToWeb3(tx) as any
-        );
+    get address() {
+        return this.contract_.address;
     }
 
-    write(tx: ITransactionRequestConfig) {
-        const promiseResult: PromiEvent<Contract> = this.method.send(
-            txRequestConfigToWeb3(tx) as any
-        );
-        let onTransactionHash, onTransactionError;
+    read<T>(config: ITransactionRequestConfig): Promise<T> {
+        this.logger.log("sending read tx with config", config);
+        return this.getMethod_(config);
+    }
+
+    private getMethod_(config: ITransactionRequestConfig = {}) {
+        const method = this.contract_[this.methodName_];
+        if (method == null) throw new Error(`No method ${this.methodName_} found`);
+        return method(...this.args_, this.toConfig_(config));
+    }
+
+    toBigNumber(value) {
+        return value ? BigNumber.from(value) : value;
+    }
+
+    private toConfig_(config: ITransactionRequestConfig = {}) {
+        if (config) {
+            const toBigNumber = this.toBigNumber;
+            return {
+                to: config.to,
+                from: config.from,
+                gasPrice: toBigNumber(config.gasPrice),
+                gasLimit: toBigNumber(config.gasLimit),
+                value: toBigNumber(config.value),
+                nonce: config.nonce,
+                // chainId: config.chainId,
+                data: config.data,
+                type: config.type,
+                maxFeePerGas: toBigNumber(config.maxFeePerGas),
+                maxPriorityFeePerGas: toBigNumber(config.maxPriorityFeePerGas),
+
+            } as PopulatedTransaction;
+        }
+        return config;
+    }
+
+    write(config: ITransactionRequestConfig) {
+        const promiseResult: Promise<providers.TransactionResponse> = this.getMethod_(config);
+
+        let onTransactionHash, onTransactionHashError;
         const txHashPromise = new Promise<string>((res, rej) => {
             onTransactionHash = res;
-            onTransactionError = rej;
+            onTransactionHashError = rej;
         });
         let onTransactionReceipt, onTransactionReceiptError;
         const txReceiptPromise = new Promise<any>((res, rej) => {
             onTransactionReceipt = res;
             onTransactionReceiptError = rej;
         });
-        promiseResult.once("transactionHash", onTransactionHash)
-            .once("receipt", onTransactionReceipt)
-            .once("error", onTransactionError).
-            once("error", onTransactionReceiptError);
+
+        promiseResult.then(response => {
+            onTransactionHash(response.hash);
+            setTimeout(() => {
+                response.wait().then(receipt => {
+                    onTransactionReceipt(receipt);
+                }).catch(onTransactionReceiptError);
+            }, 0);
+        }).catch(onTransactionHashError);
 
         const getTransactionHash: TYPE_GET_TRANSACTION_HASH = () => {
             return txHashPromise;
@@ -44,13 +79,7 @@ export class ContractMethod extends BaseContractMethod {
         return [getTransactionHash, getTransactionReceipt] as any;
     }
 
-    estimateGas(tx: ITransactionRequestConfig): Promise<number> {
-        return this.method.estimateGas(
-            txRequestConfigToWeb3(tx) as any
-        );
-    }
-
     encodeABI() {
-        return this.method.encodeABI();
+        return this.contract_.interface.encodeFunctionData(this.methodName_, this.args_);
     }
 }

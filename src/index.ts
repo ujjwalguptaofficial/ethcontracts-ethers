@@ -1,1 +1,1 @@
-export * from "./web3_client";
+export * from "./ether_client";

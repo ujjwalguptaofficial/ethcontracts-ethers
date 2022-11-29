@@ -2,8 +2,7 @@ import { ERC20 } from "@ethcontracts/core";
 import { expect } from "chai";
 import { ethers } from "hardhat";
 import { IDeployedPayload } from "./interface";
-import toWeb3Provider from "ethers-to-web3";
-import { Web3Client } from "@ethcontracts/web3";
+import { EthersClient } from "@ethcontracts/ethers";
 import { testERC20 } from "./erc20";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 
@@ -38,7 +37,7 @@ describe("contracts", () => {
 
     before(async () => {
       erc20 = new ERC20(payload.erc20Token1.address);
-      const client = new Web3Client(toWeb3Provider(payload.deployer.provider));
+      const client = new EthersClient(payload.deployer.provider as any);
       await erc20.init(client);
     })
 
@@ -53,7 +52,7 @@ describe("contracts", () => {
 
     before(async () => {
       erc20 = new ERC20(payload.erc20Token1.address);
-      const client = new Web3Client(toWeb3Provider(payload.deployer));
+      const client = new EthersClient(payload.deployer as any);
       await erc20.init(client);
     })
 
@@ -75,7 +74,7 @@ describe("contracts", () => {
   describe("erc20", () => {
     testERC20(
       payload, (user: SignerWithAddress) => {
-        return new Web3Client(toWeb3Provider(user));
+        return new EthersClient(user as any);
       }
     )
   })
