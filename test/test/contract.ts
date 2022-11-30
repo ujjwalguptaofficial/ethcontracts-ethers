@@ -5,6 +5,7 @@ import { IDeployedPayload } from "./interface";
 import { EthersClient } from "@ethcontracts/ethers";
 import { testERC20 } from "./erc20";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
+import { BigNumber, providers } from "ethers";
 
 describe("contracts", () => {
 
@@ -101,6 +102,53 @@ describe("contracts", () => {
     it('when address not provided', async () => {
       const balance: any = await client.getBalance();
       expect(balance.toString()).equal('9999997402096589066680');
+    })
+  })
+
+  describe('sendTransaction', async () => {
+
+    var client: EthersClient;
+
+    before(async () => {
+      client = new EthersClient(payload.signer3 as any);
+      await client.init();
+    })
+
+
+    it('transfer ether to', async () => {
+      const from = payload.signer3.address.toLowerCase();
+      const to = payload.signer2.address;
+
+      const beforeBalanceFrom: BigNumber = await client.getBalance();
+      const beforeBalanceTo = await client.getBalance<BigNumber>(to);
+      const amount = 5;
+      const [getTxHash, getTxReceipt] = client.sendTransaction({
+        value: amount,
+        //ethers.utils.parseUnits(amount.toString(), "wei"),
+        // amount,
+        to: to,
+        from
+      });
+
+      const txHash = await getTxHash();
+      expect(txHash).to.be.string;
+      const receipt = await getTxReceipt<providers.TransactionReceipt>();
+
+      expect(receipt.transactionHash).equal(txHash);
+      expect(receipt.blockHash).to.be.string;
+      expect(receipt.to.toLowerCase()).equal(to.toLowerCase());
+      expect(receipt.from.toLowerCase()).equal(from);
+
+      // const afterBalanceFrom = await client.getBalance<BigNumber>();
+      const afterBalanceFrom = await client.getBalance<BigNumber>();
+      const aftereBalanceTo = await client.getBalance(to);
+
+      console.log("beforeBalanceFrom", beforeBalanceFrom);
+      console.log("afterBalanceFrom", afterBalanceFrom);
+      console.log("diff", beforeBalanceFrom.sub(afterBalanceFrom));
+
+      // expect(afterBalanceFrom).equal(beforeBalanceFrom.sub(amount));
+      expect(aftereBalanceTo).equal(beforeBalanceTo.add(amount));
     })
   })
 
