@@ -1,5 +1,6 @@
 import { ILogger, ITransactionRequestConfig, BaseContractMethod, TYPE_GET_TRANSACTION_HASH, TYPE_GET_TRANSACTION_RECEIPT } from "@ethcontracts/core";
 import { BigNumber, Contract, PopulatedTransaction, providers } from "ethers";
+import { toEthersConfig } from "./utils";
 
 export class ContractMethod extends BaseContractMethod {
 
@@ -19,32 +20,11 @@ export class ContractMethod extends BaseContractMethod {
     private getMethod_(config: ITransactionRequestConfig = {}) {
         const method = this.contract_[this.methodName_];
         if (method == null) throw new Error(`No method ${this.methodName_} found`);
-        return method(...this.args_, this.toConfig_(config));
+        return method(...this.args_, toEthersConfig(config));
     }
 
     toBigNumber(value) {
         return value ? BigNumber.from(value) : value;
-    }
-
-    private toConfig_(config: ITransactionRequestConfig = {}) {
-        if (config) {
-            const toBigNumber = this.toBigNumber;
-            return {
-                to: config.to,
-                from: config.from,
-                gasPrice: toBigNumber(config.gasPrice),
-                gasLimit: toBigNumber(config.gasLimit),
-                value: toBigNumber(config.value),
-                nonce: config.nonce,
-                // chainId: config.chainId,
-                data: config.data,
-                type: config.type,
-                maxFeePerGas: toBigNumber(config.maxFeePerGas),
-                maxPriorityFeePerGas: toBigNumber(config.maxPriorityFeePerGas),
-
-            } as PopulatedTransaction;
-        }
-        return config;
     }
 
     write(config: ITransactionRequestConfig) {

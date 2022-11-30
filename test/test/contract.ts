@@ -85,6 +85,25 @@ describe("contracts", () => {
     })
   })
 
+  describe('check for balance on chain', async () => {
+    var client: EthersClient;
+
+    before(async () => {
+      client = new EthersClient(payload.deployer as any);
+      await client.init();
+    })
+
+    it('when address provided', async () => {
+      const balance: any = await client.getBalance(payload.signer2.address);
+      expect(balance.toString()).equal('10000000000000000000000');
+    })
+
+    it('when address not provided', async () => {
+      const balance: any = await client.getBalance();
+      expect(balance.toString()).equal('9999997402096589066680');
+    })
+  })
+
   describe("erc20", () => {
     testERC20(
       payload, (user: SignerWithAddress) => {

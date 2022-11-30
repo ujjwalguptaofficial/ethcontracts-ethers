@@ -1,6 +1,7 @@
-import { BaseWeb3Client } from "@ethcontracts/core";
+import { BaseWeb3Client, ITransactionRequestConfig, TYPE_TRANSACTION_WRITE_RESULT } from "@ethcontracts/core";
 import { Contract, providers, Wallet } from "ethers";
 import { EtherContract } from "./contract";
+import { toEthersConfig } from "./utils";
 
 type ETHER_PROVIDER = providers.JsonRpcProvider;
 type ETHER_SIGNER = providers.JsonRpcSigner;
@@ -58,5 +59,16 @@ export class EthersClient extends BaseWeb3Client {
             new Contract(address, abi, this.isSigner_ ? this.signer : this.provider),
             this.logger
         );
+    }
+
+    sendTransaction(config: ITransactionRequestConfig): TYPE_TRANSACTION_WRITE_RESULT {
+        const promise = this.signer.sendTransaction(toEthersConfig(config));
+        return promise as any;
+    }
+
+    getBalance<T>(walleAddress?: string): Promise<T> {
+        return this.provider.getBalance(walleAddress || this.walletAddress).then(result => {
+            return result as T;
+        })
     }
 }
