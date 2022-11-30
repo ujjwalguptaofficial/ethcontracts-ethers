@@ -71,6 +71,20 @@ describe("contracts", () => {
     })
   })
 
+  describe('wallet address', () => {
+    it('read only provider', async () => {
+      const client = new EthersClient(payload.deployer.provider as any);
+      await client.init();
+      expect(client.walletAddress).equal(undefined);
+    })
+
+    it('write provider', async () => {
+      const client = new EthersClient(payload.deployer as any);
+      await client.init();
+      expect(client.walletAddress).equal(payload.deployer.address);
+    })
+  })
+
   describe("erc20", () => {
     testERC20(
       payload, (user: SignerWithAddress) => {
