@@ -1,6 +1,6 @@
 {
   "name": "@ethcontracts/ethers",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "ethers.js wraper for ethcontracts.js",
   "main": "dist/npm.export.js",
   "types": "dist/ts/index.d.ts",
