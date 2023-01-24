@@ -31,4 +31,10 @@ export class ContractMethod extends BaseContractMethod {
     encodeABI() {
         return this.contract_.interface.encodeFunctionData(this.methodName_, this.args_);
     }
+
+    estimateGas(config: ITransactionRequestConfig = {}) {
+        return this.contract_.estimateGas[this.methodName_](...this.args_, toEthersConfig(config)).then(result => {
+            return result.toNumber();
+        });
+    }
 }
